@@ -1,0 +1,56 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: API-GATEWAY
+
+  config:
+    import: configserver:http://localhost:8082
+
+  cloud:
+    gateway:
+      routes:
+      - id: ORDER-SERVICE
+        uri: lb://ORDER-SERVICE
+        predicates:
+          - Path=/orders/**
+        filters:
+          - name: CircuitBreaker
+            args:
+              name: ORDER-SERVICE
+              fallbackUri: forward:/orderServiceFallBack
+
+
+      - id: PRODUCT-SERVICE
+        uri: lb://PRODUCT-SERVICE
+        predicates:
+          - Path=/product/**
+        filters:
+          - name: CircuitBreaker
+            args:
+              name: PRODUCT-SERVICE
+              fallbackUri: forward:/productServiceFallBack
+
+
+      - id: PAYMENT-SERVICE
+        uri: lb://PAYMENT-SERVICE
+        predicates:
+          - Path=/payment/**
+        filters:
+          - name: CircuitBreaker
+            args:
+              name: PAYMENT-SERVICE
+              fallbackUri: forward:/paymentServiceFallBack
+
+#security:
+#  oauth2:
+#    resourceserver:
+#      jwt:
+#        jwk-set-url: "http://localhost:7080/realms/master/protocol/openid-connect/certs"
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: DEBUG
